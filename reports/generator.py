@@ -8,15 +8,24 @@ from core.hardware import get_hardware_info, format_bytes
 from core.software import get_software_info
 from core.dependencies import get_dependency_info
 
+from ai.llm import get_llm_info
+from ai.tts import get_tts_info
+from ai.image import get_image_info
+
 
 def generate_audit():
-    """Collect all audit information."""
+    """Collect all system and AI readiness information."""
 
     return {
         "audit_time": datetime.now(timezone.utc).isoformat(),
         "hardware": get_hardware_info(),
         "software": get_software_info(),
         "dependencies": get_dependency_info(),
+        "ai_readiness": {
+            "llm": get_llm_info(),
+            "tts": get_tts_info(),
+            "image_generation": get_image_info(),
+        },
     }
 
 
@@ -63,6 +72,39 @@ def generate_terminal_report(data):
         status = "INSTALLED" if info["installed"] else "NOT FOUND"
         version = info["version"] or "-"
         lines.append(f"{name:15} {status:12} {version}")
+
+    ai = data["ai_readiness"]
+
+    for section, title in (
+        ("llm", "LOCAL LLM"),
+        ("tts", "LOCAL TEXT-TO-SPEECH"),
+        ("image_generation", "IMAGE GENERATION"),
+    ):
+        result = ai[section]
+
+        lines.extend([
+            "",
+            title,
+            "-" * 45,
+        ])
+
+        for name, info in result["engines"].items():
+            status = "FOUND" if info["installed"] else "NOT FOUND"
+            lines.append(f"{name:22} {status}")
+
+        if "models" in result:
+            lines.append(f"Models detected: {result['model_count']}")
+
+            for model in result["models"]:
+                lines.append(
+                    f"  {model['name']} "
+                    f"({format_bytes(model['size_bytes'])})"
+                )
+
+        lines.extend([
+            f"Readiness: {result['readiness']['status']}",
+            f"Reason: {result['readiness']['reason']}",
+        ])
 
     lines.extend([
         "",

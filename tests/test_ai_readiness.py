@@ -2,21 +2,18 @@
 
 import unittest
 
+from ai.image import assess_image_readiness
 from ai.llm import assess_llm_readiness
 from ai.tts import assess_tts_readiness
-from ai.image import assess_image_readiness
 
 
 class TestLLMReadiness(unittest.TestCase):
-
     def setUp(self):
         self.engines = {
             "llama-server": {"installed": True},
             "llama-cli": {"installed": True},
         }
-        self.models = [
-            {"name": "model.gguf", "size_bytes": 1024}
-        ]
+        self.models = [{"name": "model.gguf", "size_bytes": 1024}]
 
     def test_missing_engine(self):
         engines = {
@@ -44,7 +41,6 @@ class TestLLMReadiness(unittest.TestCase):
 
 
 class TestTTSReadiness(unittest.TestCase):
-
     def test_no_engine(self):
         engines = {
             "Pocket TTS": {"installed": False},
@@ -63,15 +59,12 @@ class TestTTSReadiness(unittest.TestCase):
 
 
 class TestImageReadiness(unittest.TestCase):
-
     def setUp(self):
         self.engines = {
             "sd-cli": {"installed": True},
             "sd-server": {"installed": True},
         }
-        self.models = [
-            {"name": "sdxs.safetensors", "size_bytes": 1024}
-        ]
+        self.models = [{"name": "sdxs.safetensors", "size_bytes": 1024}]
 
     def test_missing_engine(self):
         engines = {

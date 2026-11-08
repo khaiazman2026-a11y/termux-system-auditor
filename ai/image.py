@@ -5,7 +5,6 @@ from pathlib import Path
 
 from core.hardware import get_hardware_info
 
-
 ENGINE_NAMES = ("sd-cli", "sd-server")
 
 BUILD_DIRS = (
@@ -59,12 +58,14 @@ def find_image_models(model_dir=None):
         for item in directory.iterdir():
             if item.is_file() and item.suffix.lower() in MODEL_EXTENSIONS:
                 try:
-                    models.append({
-                        "name": item.name,
-                        "path": str(item),
-                        "format": item.suffix.lower(),
-                        "size_bytes": item.stat().st_size,
-                    })
+                    models.append(
+                        {
+                            "name": item.name,
+                            "path": str(item),
+                            "format": item.suffix.lower(),
+                            "size_bytes": item.stat().st_size,
+                        }
+                    )
                 except OSError:
                     continue
     except OSError:
@@ -76,9 +77,7 @@ def find_image_models(model_dir=None):
 def assess_image_readiness(engines, models, available_ram):
     """Estimate readiness without performing image generation."""
 
-    engine_available = any(
-        engine["installed"] for engine in engines.values()
-    )
+    engine_available = any(engine["installed"] for engine in engines.values())
 
     if not engine_available:
         return {

@@ -1,9 +1,9 @@
 """Main entry point for Termux System Auditor."""
 
 from reports.generator import (
+    export_reports,
     generate_audit,
     generate_terminal_report,
-    export_reports,
 )
 
 

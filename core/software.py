@@ -62,9 +62,9 @@ def get_software_info():
         "kernel": platform.release(),
         "python_version": platform.python_version(),
         "python_executable": sys.executable,
-        "is_termux": bool(os.environ.get("PREFIX", "").endswith(
-            "/com.termux/files/usr"
-        )),
+        "is_termux": bool(
+            os.environ.get("PREFIX", "").endswith("/com.termux/files/usr")
+        ),
         "termux_prefix": os.environ.get("PREFIX"),
         "commands": {},
     }

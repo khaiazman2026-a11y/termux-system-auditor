@@ -51,11 +51,13 @@ def find_gguf_models(model_dir=None):
         for item in directory.iterdir():
             if item.is_file() and item.suffix.lower() == ".gguf":
                 try:
-                    models.append({
-                        "name": item.name,
-                        "path": str(item),
-                        "size_bytes": item.stat().st_size,
-                    })
+                    models.append(
+                        {
+                            "name": item.name,
+                            "path": str(item),
+                            "size_bytes": item.stat().st_size,
+                        }
+                    )
                 except OSError:
                     continue
     except OSError:
@@ -67,9 +69,7 @@ def find_gguf_models(model_dir=None):
 def assess_llm_readiness(engines, models, available_ram):
     """Provide a conservative preliminary readiness assessment."""
 
-    engine_available = any(
-        engine["installed"] for engine in engines.values()
-    )
+    engine_available = any(engine["installed"] for engine in engines.values())
 
     if not engine_available:
         return {

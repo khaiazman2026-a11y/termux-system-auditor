@@ -3,7 +3,6 @@
 import importlib.util
 import shutil
 
-
 COMMANDS = {
     "pocket-tts": "Pocket TTS",
     "piper": "Piper",
@@ -51,10 +50,7 @@ def find_tts_engines():
 def assess_tts_readiness(engines):
     """Estimate TTS readiness without claiming a voice test."""
 
-    detected = [
-        name for name, info in engines.items()
-        if info["installed"]
-    ]
+    detected = [name for name, info in engines.items() if info["installed"]]
 
     if not detected:
         return {
@@ -79,8 +75,6 @@ def get_tts_info():
 
     return {
         "engines": engines,
-        "engine_count": sum(
-            1 for info in engines.values() if info["installed"]
-        ),
+        "engine_count": sum(1 for info in engines.values() if info["installed"]),
         "readiness": assess_tts_readiness(engines),
     }

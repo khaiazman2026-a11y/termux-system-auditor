@@ -3,7 +3,6 @@
 import importlib.metadata
 import importlib.util
 
-
 DEFAULT_DEPENDENCIES = {
     "torch": "torch",
     "numpy": "numpy",
@@ -34,7 +33,7 @@ def check_dependency(module_name, package_name=None):
             version = importlib.metadata.version(package_name)
         except importlib.metadata.PackageNotFoundError:
             version = "VERSION UNKNOWN"
-        except Exception:
+        except (OSError, ValueError):
             version = "VERSION UNKNOWN"
 
     return {

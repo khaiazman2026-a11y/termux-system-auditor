@@ -35,8 +35,8 @@ def find_tts_engines():
     for module, name in PYTHON_MODULES.items():
         try:
             available = importlib.util.find_spec(module) is not None
-        except (ImportError, ValueError):
-            available = False
+        except (ImportError, ValueError, OSError):
+            available = None
 
         engines[name] = {
             "installed": available,

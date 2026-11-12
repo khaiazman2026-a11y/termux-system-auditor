@@ -22,17 +22,18 @@ def get_command_info(command):
 
     try:
         result = subprocess.run(
-            [command, "--version"],
+            [path, "--version"],
             capture_output=True,
             text=True,
             timeout=3,
             check=False,
         )
 
-        output = result.stdout.strip() or result.stderr.strip()
+        if result.returncode == 0:
+            output = result.stdout.strip() or result.stderr.strip()
 
-        if output:
-            version = output.splitlines()[0]
+            if output:
+                version = output.splitlines()[0]
 
     except (OSError, subprocess.TimeoutExpired):
         pass

@@ -1,10 +1,11 @@
 """Tests for local AI readiness assessments."""
 
 import unittest
+from unittest.mock import patch
 
-from ai.image import assess_image_readiness
-from ai.llm import assess_llm_readiness
-from ai.tts import assess_tts_readiness
+from ai.image import assess_image_readiness, find_image_models
+from ai.llm import assess_llm_readiness, find_gguf_models
+from ai.tts import assess_tts_readiness, find_tts_engines
 
 
 class TestLLMReadiness(unittest.TestCase):
@@ -40,6 +41,37 @@ class TestLLMReadiness(unittest.TestCase):
         self.assertEqual(result["status"], "LIMITED")
 
 
+class TestGGUFModelDiscovery(unittest.TestCase):
+    def test_inaccessible_model_directory(self):
+        with (
+            patch("pathlib.Path.is_dir", return_value=True),
+            patch(
+                "pathlib.Path.iterdir",
+                side_effect=PermissionError("Access denied"),
+            ),
+        ):
+            models = find_gguf_models("/restricted/models")
+
+        self.assertIsNone(models)
+
+    def test_missing_model_directory(self):
+        with patch("pathlib.Path.is_dir", return_value=False):
+            models = find_gguf_models("/missing/models")
+
+        self.assertIsNone(models)
+
+
+class TestTTSEngineDiscovery(unittest.TestCase):
+    def test_python_module_inspection_error(self):
+        with patch(
+            "ai.tts.importlib.util.find_spec",
+            side_effect=OSError("Inspection failed"),
+        ):
+            engines = find_tts_engines()
+
+        self.assertIsNone(engines["Pocket TTS"]["installed"])
+
+
 class TestTTSReadiness(unittest.TestCase):
     def test_no_engine(self):
         engines = {
@@ -56,6 +88,26 @@ class TestTTSReadiness(unittest.TestCase):
         }
         result = assess_tts_readiness(engines)
         self.assertEqual(result["status"], "LIMITED")
+
+
+class TestImageModelDiscovery(unittest.TestCase):
+    def test_inaccessible_model_directory(self):
+        with (
+            patch("pathlib.Path.is_dir", return_value=True),
+            patch(
+                "pathlib.Path.iterdir",
+                side_effect=PermissionError("Access denied"),
+            ),
+        ):
+            models = find_image_models("/restricted/models")
+
+        self.assertIsNone(models)
+
+    def test_missing_model_directory(self):
+        with patch("pathlib.Path.is_dir", return_value=False):
+            models = find_image_models("/missing/models")
+
+        self.assertIsNone(models)
 
 
 class TestImageReadiness(unittest.TestCase):

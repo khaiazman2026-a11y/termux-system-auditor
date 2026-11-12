@@ -96,6 +96,100 @@ class TestReportGeneration(unittest.TestCase):
         self.assertIn("LOCAL TEXT-TO-SPEECH", report)
         self.assertIn("IMAGE GENERATION", report)
 
+    def test_terminal_report_shows_dependency_inspection_error(self):
+        self.data["dependencies"]["numpy"] = {
+            "installed": None,
+            "version": None,
+            "inspection_status": "ERROR",
+        }
+
+        report = generate_terminal_report(self.data)
+
+        self.assertIn("INSPECTION ERROR", report)
+
+    def test_terminal_report_shows_ai_engine_inspection_error(self):
+        self.data["ai_readiness"]["tts"]["engines"]["Kokoro"] = {
+            "installed": None,
+            "type": "python module",
+            "path": None,
+        }
+
+        report = generate_terminal_report(self.data)
+
+        self.assertIn("Kokoro", report)
+        self.assertIn("INSPECTION ERROR", report)
+
+    def test_terminal_report_handles_missing_ram_value(self):
+        del self.data["hardware"]["ram"]["available_bytes"]
+
+        report = generate_terminal_report(self.data)
+
+        self.assertIn("RAM Available: UNKNOWN", report)
+
+    def test_terminal_report_handles_missing_storage_value(self):
+        del self.data["hardware"]["storage"]["available_bytes"]
+
+        report = generate_terminal_report(self.data)
+
+        self.assertIn("Storage Free : UNKNOWN", report)
+
+    def test_terminal_report_handles_missing_cpu_threads(self):
+        del self.data["hardware"]["cpu_threads"]
+
+        report = generate_terminal_report(self.data)
+
+        self.assertIn("CPU Threads  : UNKNOWN", report)
+
+    def test_terminal_report_handles_missing_architecture(self):
+        del self.data["hardware"]["architecture"]
+
+        report = generate_terminal_report(self.data)
+
+        self.assertIn("Architecture : UNKNOWN", report)
+
+    def test_terminal_report_handles_missing_python_version(self):
+        del self.data["software"]["python_version"]
+
+        report = generate_terminal_report(self.data)
+
+        self.assertIn("Python           : UNKNOWN", report)
+
+    def test_terminal_report_handles_missing_operating_system(self):
+        del self.data["software"]["operating_system"]
+
+        report = generate_terminal_report(self.data)
+
+        self.assertIn("Operating System : UNKNOWN", report)
+
+    def test_terminal_report_handles_missing_termux_status(self):
+        del self.data["software"]["is_termux"]
+
+        report = generate_terminal_report(self.data)
+
+        self.assertIn("Termux           : UNKNOWN", report)
+
+    def test_terminal_report_handles_missing_commands(self):
+        del self.data["software"]["commands"]
+
+        report = generate_terminal_report(self.data)
+
+        self.assertIn("Development tools: UNKNOWN", report)
+
+    def test_terminal_report_handles_missing_dependencies(self):
+        del self.data["dependencies"]
+
+        report = generate_terminal_report(self.data)
+
+        self.assertIn("PYTHON DEPENDENCIES", report)
+        self.assertIn("Dependency information: UNKNOWN", report)
+
+    def test_terminal_report_handles_missing_ai_readiness(self):
+        del self.data["ai_readiness"]
+
+        report = generate_terminal_report(self.data)
+
+        self.assertIn("Readiness: UNKNOWN", report)
+
     def test_terminal_report_contains_readiness_status(self):
         report = generate_terminal_report(self.data)
 

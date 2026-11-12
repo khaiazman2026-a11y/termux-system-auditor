@@ -41,25 +41,30 @@ def generate_terminal_report(data):
         "",
         "HARDWARE",
         "-" * 45,
-        f"Architecture : {hardware['architecture']}",
-        f"CPU Threads  : {hardware['cpu_threads']}",
+        f"Architecture : {hardware.get('architecture', 'UNKNOWN')}",
+        f"CPU Threads  : {hardware.get('cpu_threads', 'UNKNOWN')}",
         f"RAM Total    : {format_bytes(hardware['ram']['total_bytes'])}",
-        f"RAM Available: {format_bytes(hardware['ram']['available_bytes'])}",
-        f"Storage Free : {format_bytes(hardware['storage']['available_bytes'])}",
+        f"RAM Available: {format_bytes(hardware['ram'].get('available_bytes'))}",
+        f"Storage Free : {format_bytes(hardware['storage'].get('available_bytes'))}",
         "",
         "SOFTWARE",
         "-" * 45,
-        f"Operating System : {software['operating_system']}",
-        f"Python           : {software['python_version']}",
-        f"Termux           : {software['is_termux']}",
+        f"Operating System : {software.get('operating_system', 'UNKNOWN')}",
+        f"Python           : {software.get('python_version', 'UNKNOWN')}",
+        f"Termux           : {software.get('is_termux', 'UNKNOWN')}",
         "",
         "DEVELOPMENT TOOLS",
         "-" * 45,
     ]
 
-    for name, info in software["commands"].items():
-        status = "INSTALLED" if info["installed"] else "NOT FOUND"
-        lines.append(f"{name:15} {status}")
+    commands = software.get("commands")
+
+    if commands is None:
+        lines.append("Development tools: UNKNOWN")
+    else:
+        for name, info in commands.items():
+            status = "INSTALLED" if info["installed"] else "NOT FOUND"
+            lines.append(f"{name:15} {status}")
 
     lines.extend(
         [
@@ -69,20 +74,43 @@ def generate_terminal_report(data):
         ]
     )
 
-    for name, info in data["dependencies"].items():
-        status = "INSTALLED" if info["installed"] else "NOT FOUND"
-        version = info["version"] or "-"
-        lines.append(f"{name:15} {status:12} {version}")
+    dependencies = data.get("dependencies")
 
-    ai = data["ai_readiness"]
+    if dependencies is None:
+        lines.append("Dependency information: UNKNOWN")
+    else:
+        for name, info in dependencies.items():
+            if info.get("inspection_status") == "ERROR":
+                status = "INSPECTION ERROR"
+            elif info["installed"] is True:
+                status = "INSTALLED"
+            elif info["installed"] is False:
+                status = "NOT FOUND"
+            else:
+                status = "UNKNOWN"
+
+            version = info.get("version") or "-"
+            lines.append(f"{name:15} {status:16} {version}")
+    ai = data.get("ai_readiness") or {}
 
     for section, title in (
         ("llm", "LOCAL LLM"),
         ("tts", "LOCAL TEXT-TO-SPEECH"),
         ("image_generation", "IMAGE GENERATION"),
     ):
-        result = ai[section]
+        result = ai.get(section)
 
+        if result is None:
+            lines.extend(
+                [
+                    "",
+                    title,
+                    "-" * 45,
+                    "Readiness: UNKNOWN",
+                    "Reason: AI readiness data unavailable.",
+                ]
+            )
+            continue
         lines.extend(
             [
                 "",
@@ -91,23 +119,35 @@ def generate_terminal_report(data):
             ]
         )
 
-        for name, info in result["engines"].items():
-            status = "FOUND" if info["installed"] else "NOT FOUND"
+        engines = result.get("engines") or {}
+
+        for name, info in engines.items():
+            if info.get("installed") is True:
+                status = "FOUND"
+            elif info.get("installed") is False:
+                status = "NOT FOUND"
+            else:
+                status = "INSPECTION ERROR"
+
             lines.append(f"{name:22} {status}")
 
         if "models" in result:
-            lines.append(f"Models detected: {result['model_count']}")
+            models = result.get("models") or []
+            model_count = result.get("model_count", len(models))
+            lines.append(f"Models detected: {model_count}")
 
-            for model in result["models"]:
-                lines.append(f"  {model['name']} ({format_bytes(model['size_bytes'])})")
+            for model in models:
+                name = model.get("name", "UNKNOWN")
+                size = format_bytes(model.get("size_bytes"))
+                lines.append(f"  {name} ({size})")
 
+        readiness = result.get("readiness") or {}
         lines.extend(
             [
-                f"Readiness: {result['readiness']['status']}",
-                f"Reason: {result['readiness']['reason']}",
+                f"Readiness: {readiness.get('status', 'UNKNOWN')}",
+                f"Reason: {readiness.get('reason', 'Readiness information unavailable.')}",
             ]
         )
-
     lines.extend(
         [
             "",

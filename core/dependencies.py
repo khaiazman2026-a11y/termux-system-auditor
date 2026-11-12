@@ -23,8 +23,14 @@ def check_dependency(module_name, package_name=None):
 
     try:
         available = importlib.util.find_spec(module_name) is not None
-    except (ImportError, ValueError):
-        available = False
+    except (ImportError, ValueError, OSError):
+        return {
+            "module": module_name,
+            "package": package_name,
+            "installed": None,
+            "version": None,
+            "inspection_status": "ERROR",
+        }
 
     version = None
 
@@ -41,6 +47,7 @@ def check_dependency(module_name, package_name=None):
         "package": package_name,
         "installed": available,
         "version": version,
+        "inspection_status": "FOUND" if available else "NOT_FOUND",
     }
 
 

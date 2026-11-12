@@ -23,20 +23,35 @@ def format_bytes(value):
 
 def get_memory_info():
     """Read total and available RAM from /proc/meminfo."""
-    memory = {}
+    memory = {
+        "MemTotal": None,
+        "MemAvailable": None,
+    }
 
-    with open("/proc/meminfo", "r", encoding="utf-8") as file:
-        for line in file:
-            parts = line.split()
+    try:
+        with open("/proc/meminfo", "r", encoding="utf-8") as file:
+            for line in file:
+                parts = line.split()
 
-            if len(parts) >= 2:
+                if len(parts) < 2:
+                    continue
+
                 key = parts[0].rstrip(":")
-                if key in ("MemTotal", "MemAvailable"):
+
+                if key not in memory:
+                    continue
+
+                try:
                     memory[key] = int(parts[1]) * 1024
+                except ValueError:
+                    continue
+
+    except OSError:
+        pass
 
     return {
-        "total_bytes": memory.get("MemTotal"),
-        "available_bytes": memory.get("MemAvailable"),
+        "total_bytes": memory["MemTotal"],
+        "available_bytes": memory["MemAvailable"],
     }
 
 

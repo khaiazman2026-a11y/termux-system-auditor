@@ -44,8 +44,11 @@ def find_gguf_models(model_dir=None):
 
     models = []
 
-    if not directory.is_dir():
-        return models
+    try:
+        if not directory.is_dir():
+            return None
+    except OSError:
+        return None
 
     try:
         for item in directory.iterdir():
@@ -61,7 +64,7 @@ def find_gguf_models(model_dir=None):
                 except OSError:
                     continue
     except OSError:
-        pass
+        return None
 
     return models
 
@@ -75,6 +78,12 @@ def assess_llm_readiness(engines, models, available_ram):
         return {
             "status": "NOT READY",
             "reason": "No llama.cpp executable was detected.",
+        }
+
+    if models is None:
+        return {
+            "status": "UNKNOWN",
+            "reason": "The model directory could not be inspected.",
         }
 
     if not models:
@@ -99,11 +108,14 @@ def assess_llm_readiness(engines, models, available_ram):
         )
     else:
         reason = (
-            "The model file is smaller than available RAM, but runtime "
-            "overhead and context memory have not been measured."
+            "A llama.cpp engine and GGUF model were detected. "
+            "Actual inference compatibility and memory use have not been tested."
         )
 
-    return {"status": "LIMITED", "reason": reason}
+    return {
+        "status": "LIMITED",
+        "reason": reason,
+    }
 
 
 def get_llm_info(model_dir=None):
@@ -111,7 +123,9 @@ def get_llm_info(model_dir=None):
 
     hardware = get_hardware_info()
     engines = find_llama_engine()
-    models = find_gguf_models(model_dir)
+
+    discovered_models = find_gguf_models(model_dir)
+    models = discovered_models if discovered_models is not None else []
 
     available_ram = hardware["ram"]["available_bytes"]
 
@@ -125,7 +139,7 @@ def get_llm_info(model_dir=None):
         "available_ram_bytes": available_ram,
         "readiness": assess_llm_readiness(
             engines,
-            models,
+            discovered_models,
             available_ram,
         ),
     }

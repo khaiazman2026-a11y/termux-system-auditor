@@ -51,8 +51,11 @@ def find_image_models(model_dir=None):
     directory = Path(model_dir) if model_dir else Path.home() / "models"
     models = []
 
-    if not directory.is_dir():
-        return models
+    try:
+        if not directory.is_dir():
+            return None
+    except OSError:
+        return None
 
     try:
         for item in directory.iterdir():
@@ -69,7 +72,7 @@ def find_image_models(model_dir=None):
                 except OSError:
                     continue
     except OSError:
-        pass
+        return None
 
     return models
 
@@ -85,6 +88,11 @@ def assess_image_readiness(engines, models, available_ram):
             "reason": "No supported image-generation executable was detected.",
         }
 
+    if models is None:
+        return {
+            "status": "UNKNOWN",
+            "reason": "The image model directory could not be inspected.",
+        }
     if not models:
         return {
             "status": "UNKNOWN",
@@ -120,8 +128,8 @@ def get_image_info(model_dir=None):
 
     hardware = get_hardware_info()
     engines = find_image_engines()
-    models = find_image_models(model_dir)
-
+    discovered_models = find_image_models(model_dir)
+    models = discovered_models if discovered_models is not None else []
     available_ram = hardware["ram"]["available_bytes"]
 
     return {
@@ -134,7 +142,7 @@ def get_image_info(model_dir=None):
         "available_ram_bytes": available_ram,
         "readiness": assess_image_readiness(
             engines,
-            models,
+            discovered_models,
             available_ram,
         ),
     }
